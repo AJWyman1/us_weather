@@ -45,6 +45,8 @@ The code for this graph can be found under:
 
     graph_rainfall
 
+For this graph I started with a single location in a dataframe which I grouped by the month. I then did the same for the rest of the locations appending it to the end of the original dataframe. I then took this large dataframe and turned it into a pivot table with the information I needed for the graph. Using pivot table functions I was able to sort the total values from largest to smallest. Finally I created the color gradient and changed the order of the legend to match the order seen on the graph.
+
 # Long periods without Precipitation 
 
 LA , while is in a desert, having less than ten inches of total rainfall struck me as odd, digging further I found that LA had 122 consecutive days where the precipitation was less than 1/20th of an inch with the next closest in Phoenix at less than half the duration. Indy only reached a maximum of 18 consecutive days without significant rainfall, the lowest of all ten cities.
@@ -56,6 +58,8 @@ The code for this graph can be found under:
     graph_longest_drought
 
 
+In making this visualization I first used a list comprehension that looped through the datasets and called my function `longest_drought` which creates an accumulator which looks at the actual precipitation and updates if it is below the threshold. This data is then loaded into a dataframe, sorted and plotted.
+
 # Historic Weather
 ![](imgs/record_days.png)
 
@@ -64,6 +68,8 @@ Seattle set the most heat records with 20 beating Phoenix at 17 and every other 
 The code for this graph can be found under:
 
     graph_records
+
+To create this graph I created masks for the dataframes to look at when the current year matched the year of the record. Due to the missing data in the Chicago dataset I also added another comparison to compare the actual high and lows to the record high and lows. I applied the same strategy of comparing actual to the record to obtain the number of days of record rainfall. However, with just that mask LA had a surprising number of "rainfall record", I looked further into this and saw quite a few instances of 0" as the record precipitation. With that in mind I added a check to see if the record precipitation was not zero.
 
 # Weekly Averages 
 After seeing the number of records set in the timespan of the dataset I wanted to look at each city closer and see how different 2014-2015 was when compared to the average year in the city.
@@ -79,7 +85,13 @@ The code for this graph can be found under:
 
     avg_max_min_graph
 
-Sources: [Weather Underground](http://wunderground.com)
+Finally, these graphs were created by first loading in the data, creating a new column corresponding to the week and grouping the data into these 52 rows to obtain the weekly averages. Using my function `get_change_in_average` I was able to calculate both the historical and the actual averages and find the difference. In order to visualize this data correctly I needed to create an adjusted week value to graph due to the datasets starting in the middle of the year, without this adjustment the graph would begin in January 2015 and end December 2014 which would cause confusion. Now that the data are in the correct order I plotted the historical high and low weekly averages followed by the dataset's actual weekly averages. In order to better visualize the difference in these points I added vertical lines starting at the historical average and stopping at the actual average. Changing the X-axis tick marks to represent months instead of weeks and adding tick marks and labels to the right side of the second plot helped to create better clarity.
+
+
+
+# Sources 
+
+[Weather Underground](http://wunderground.com)
 
 [FiveThirtyEight](https://github.com/fivethirtyeight/data/tree/master/us-weather-history)
 

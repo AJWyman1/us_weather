@@ -22,13 +22,25 @@ class weather_examiner(object):
                           'KPHX': 'Phoenix, AZ',
                           'KSEA': 'Seattle, WA'}
 
-    def longest_drought(self, df):
+    def load_and_transform(self, path):
+        # Loads the data
+        df = pd.read_csv('data/'+path+'.csv')
+
+        # Adds needed columns and converts str to datetime
+        df.date = pd.to_datetime(df.date)
+        df['month'] = df['date'].dt.month
+        df['week'] = df['date'].dt.week
+        df['location'] = path
+
+        return df
+
+    def longest_drought(self, df, rain_tresh=0.05):
         # takes in a dataframe and returns an int of the longest
         # span of consecutive days with light or less rain fall
         max_days = 0
         running_count = 0
         for rain in df.actual_precipitation:
-            if rain < 0.05:
+            if rain < rain_tresh:
                 running_count += 1
             else:
                 if running_count > max_days:
@@ -52,18 +64,6 @@ class weather_examiner(object):
 
         return delta_max, delta_min
 
-    def load_and_transform(self, path):
-        # Loads the data
-        df = pd.read_csv('data/'+path+'.csv')
-
-        # Adds needed columns and converts str to datetime
-        df.date = pd.to_datetime(df.date)
-        df['month'] = df['date'].dt.month
-        df['week'] = df['date'].dt.week
-        df['location'] = path
-
-        return df
-
     def avg_max_min_graph(self, location, name, save=False):
         df = self.load_and_transform(location)
         week_df = df.groupby(['week']).mean().reset_index()
@@ -84,13 +84,6 @@ class weather_examiner(object):
         plt.setp(ax, xticks=ticks, xticklabels=months)
         ax[0].tick_params(axis="x", labelsize=12)
         ax[1].tick_params(axis="x", labelsize=12)
-        # # Dashed line and text to show which year the data take place
-        # ax[0].axvline(df.week[0], ls='--', color='black', alpha=.3)
-        # ax[1].axvline(df.week[0], ls='--', color='black', alpha=.3)
-        # plt.text(.423, .005, '2015    2014', fontsize=10,
-        #          transform=ax[1].transAxes, alpha=.5)
-        # plt.text(.423, .005, '2015    2014', fontsize=10,
-        #          transform=ax[0].transAxes, alpha=.5)
 
         # Plot lines to visualize the difference
         ax[0].vlines(week_df.adjusted_week, week_df.average_max_temp,
@@ -142,13 +135,6 @@ class weather_examiner(object):
             df_month2['location'] = place
             df_month = df_month.append(df_month2, ignore_index=True)
 
-        # Create color gradient and list for month ticks
-        blue = Color('skyblue')
-        colors = list(blue.range_to(Color('darkblue'), 12))
-        colors = [color.rgb for color in colors]
-        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
         # Pivot table setup to create stacked bar chart
         pivot_df = df_month.pivot_table(index='location',
                                         columns='month',
@@ -159,6 +145,13 @@ class weather_examiner(object):
         pivot_df = pivot_df.sort_values('All',
                                         ascending=False,
                                         axis=0).drop('All').drop('All', axis=1)
+
+        # Create color gradient and list for stack of months
+        blue = Color('skyblue')
+        colors = list(blue.range_to(Color('darkblue'), 12))
+        colors = [color.rgb for color in colors]
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
         pivot_df.plot.bar(stacked=True, figsize=(10, 7), color=colors)
 
