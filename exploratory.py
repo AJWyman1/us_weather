@@ -129,10 +129,12 @@ class weather_examiner(object):
         plt.show()
 
     def graph_rainfall(self, save=False):
+        # Set up initial df to append to later
         df = self.load_and_transform('KCQT')
         df_month = df.groupby(['month']).sum().reset_index()
         df_month['location'] = 'KCQT'
 
+        # Load rest of the dfs and append to initial df
         for place in ['KCLT', 'KHOU', 'KIND',
                       'KJAX', 'KMDW', 'KNYC',
                       'KPHL', 'KPHX', 'KSEA']:
@@ -148,11 +150,29 @@ class weather_examiner(object):
         months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-        pivot_df = df_month.pivot(index='location', columns='month',
-                                  values='actual_precipitation')
+        # Pivot table setup to create stacked bar chart
+        pivot_df = df_month.pivot_table(index='location',
+                                        columns='month',
+                                        values='actual_precipitation',
+                                        aggfunc='sum',
+                                        margins=True)
+        # Sort values to increase readability and drop unused rows and cols
+        pivot_df = pivot_df.sort_values('All',
+                                        ascending=False,
+                                        axis=0).drop('All').drop('All', axis=1)
+
         pivot_df.plot.bar(stacked=True, figsize=(10, 7), color=colors)
 
-        plt.legend(bbox_to_anchor=(1.0, 1), loc='upper left', labels=months)
+        # Reordering the legend to match the stack of the bar chart for
+        # increased readability
+        # Get legend handles
+        handles, _ = plt.gca().get_legend_handles_labels()
+        # List of indicies for new order
+        order = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+        # Set up the legend to display Jan at bottom of legend
+        plt.legend([handles[idx] for idx in order],
+                   [months[idx] for idx in order], bbox_to_anchor=(1.0, 1))
+
         plt.xlabel('Location', fontsize=16)
         plt.ylabel('Cumulative Precipitation in Inches', fontsize=16)
         plt.title('Total Precipitation Across all Locations', fontsize=18)
@@ -217,10 +237,10 @@ if __name__ == "__main__":
     weather_ex = weather_examiner()
     # Bools to control which graphs are produced and if they are saved
     make_temp_graphs = False
-    graph_rain = False
+    graph_rain = True
     graph_record = False
     graph_consecutive = False
-    save = False
+    save = True
 
     if make_temp_graphs:
         for code, name in weather_ex.locations.items():
