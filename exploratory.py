@@ -68,43 +68,45 @@ class weather_examiner(object):
         df = self.load_and_transform(location)
         week_df = df.groupby(['week']).mean().reset_index()
 
+        week_df['adjusted_week'] = week_df.apply(
+            lambda row: row.week - 26 if row.week - 26 > 0 else row.week + 26,
+            axis=1)
         delta_max, delta_min = self.get_change_in_average(df)
         max_str = f'Δμ = {delta_max:.2f}°F'
         min_str = f'Δμ = {delta_min:.2f}°F'
 
-        rainfall = self.longest_drought(df)
-
         # Create the plots
         fig, ax = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(16, 7))
         # Set the X ticks to month names increasing clarity
-        months = ['Jan', '', '', '', 'May', '', '', 'Aug', '', '', '', 'Dec']
+        months = ['Jul', '', 'Sep', '', 'Nov', '',
+                  'Jan', '', 'Mar', '', 'May', '']
         ticks = np.linspace(1, 54, num=12, endpoint=False)
         plt.setp(ax, xticks=ticks, xticklabels=months)
         ax[0].tick_params(axis="x", labelsize=12)
         ax[1].tick_params(axis="x", labelsize=12)
-        # Dashed line and text to show which year the data take place
-        ax[0].axvline(df.week[0], ls='--', color='black', alpha=.3)
-        ax[1].axvline(df.week[0], ls='--', color='black', alpha=.3)
-        plt.text(.423, .005, '2015    2014', fontsize=10,
-                 transform=ax[1].transAxes, alpha=.5)
-        plt.text(.423, .005, '2015    2014', fontsize=10,
-                 transform=ax[0].transAxes, alpha=.5)
+        # # Dashed line and text to show which year the data take place
+        # ax[0].axvline(df.week[0], ls='--', color='black', alpha=.3)
+        # ax[1].axvline(df.week[0], ls='--', color='black', alpha=.3)
+        # plt.text(.423, .005, '2015    2014', fontsize=10,
+        #          transform=ax[1].transAxes, alpha=.5)
+        # plt.text(.423, .005, '2015    2014', fontsize=10,
+        #          transform=ax[0].transAxes, alpha=.5)
 
         # Plot lines to visualize the difference
-        ax[0].vlines(week_df.week, week_df.average_max_temp,
+        ax[0].vlines(week_df.adjusted_week, week_df.average_max_temp,
                      week_df.actual_max_temp, label=max_str)
-        ax[1].vlines(week_df.week, week_df.average_min_temp,
+        ax[1].vlines(week_df.adjusted_week, week_df.average_min_temp,
                      week_df.actual_min_temp, label=min_str)
 
         # Plot the weekly historical averages
-        ax[0].scatter(week_df.week, week_df.average_max_temp,
+        ax[0].scatter(week_df.adjusted_week, week_df.average_max_temp,
                       color='pink', label='Yearly Average Max Temp')
-        ax[1].scatter(week_df.week, week_df.average_min_temp,
+        ax[1].scatter(week_df.adjusted_week, week_df.average_min_temp,
                       color='skyblue', label='Yearly Average Min Temp')
         # Plot the current weekly averages
-        ax[0].scatter(week_df.week, week_df.actual_max_temp,
+        ax[0].scatter(week_df.adjusted_week, week_df.actual_max_temp,
                       color='red', label='Actual Average Max Temp')
-        ax[1].scatter(week_df.week, week_df.actual_min_temp,
+        ax[1].scatter(week_df.adjusted_week, week_df.actual_min_temp,
                       color='blue', label='Actual Average Min Temp')
 
         # Show the legends and remove the frame to see the plots better
@@ -112,17 +114,14 @@ class weather_examiner(object):
         ax[1].legend(loc="upper right", framealpha=0)
         # Set Y label and increse text size
         ax[0].set_ylabel('Temperature in °F', fontsize=16)
-        # Set text box to describe longest period with only < .05" of rain
-        plt.text(-.4, -.13, f'{location} spent {rainfall} consecutive '
-                 'days with\nless than .05 inches of rainfall per day',
-                 fontsize=10, transform=ax[1].transAxes)
+
         # Put a title in the center of the two graphs
         plt.suptitle(f'Weekly average maximum and minimums at '
-                     '{location}\n{name}',
+                     f'{location} ({name})',
                      fontsize=18)
         # Add ticks and labels to left side
         ax[1].tick_params(labelright=True, right=True, left=False)
-
+        plt.tight_layout(pad=3)
         if save:
             plt.savefig('imgs/'+location+'.png')
 
@@ -214,13 +213,14 @@ class weather_examiner(object):
         # Plot the data
         plt.bar(ind-width, rain_records, width=width, label='Record Rain',
                 color='skyblue')  # 35 total
-        plt.bar(ind, hot_records, width=width, label='Record Highs',
+        plt.bar(ind, hot_records, width=width, label='Record High',
                 color='red')  # 53 total
-        plt.bar(ind+width, cold_records, width=width, label='Record Lows',
+        plt.bar(ind+width, cold_records, width=width, label='Record Low',
                 color='blue')  # 18 total
         # place xticks with reordered location names
         plt.xticks(ind + width / 3, [self.locs[i] for i in sorted_idx],
                    fontsize=10, rotation=40)
+        plt.yticks(np.linspace(4, 20, 5))
         # Set labels and titles
         plt.ylabel('Number of Days', fontsize=14)
         plt.xlabel('Locations', fontsize=14)
@@ -260,9 +260,9 @@ class weather_examiner(object):
 if __name__ == "__main__":
     weather_ex = weather_examiner()
     # Bools to control which graphs are produced and if they are saved
-    make_temp_graphs = False
+    make_temp_graphs = True
     graph_rain = False
-    graph_record = True
+    graph_record = False
     graph_consecutive = False
     save = True
 
