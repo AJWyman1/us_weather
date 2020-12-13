@@ -54,7 +54,7 @@ class weather_examiner(object):
 
     def load_and_transform(self, path):
         # Loads the data
-        df = pd.read_csv(path+'.csv')
+        df = pd.read_csv('data/'+path+'.csv')
 
         # Adds needed columns and converts str to datetime
         df.date = pd.to_datetime(df.date)
