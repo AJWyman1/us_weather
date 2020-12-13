@@ -184,29 +184,44 @@ class weather_examiner(object):
         plt.show()
 
     def graph_records(self, save=False):
+        # Empty lists to gather the data
         hot_records = []
         cold_records = []
         rain_records = []
+        # Loops through locations, create masks, appends to list
         for place in self.locs:
             df = self.load_and_transform(place)
-            c_mask = ((df['record_min_temp_year'] >= df.date.dt.year) |
+            # checks if record year = current year or if record temp = actual
+            c_mask = ((df['record_min_temp_year'] == df.date.dt.year) |
                       (df['record_min_temp'] == df['actual_min_temp']))
-            h_mask = ((df['record_max_temp_year'] >= df.date.dt.year) |
+            h_mask = ((df['record_max_temp_year'] == df.date.dt.year) |
                       (df['record_max_temp'] == df['actual_max_temp']))
-            r_mask = ((df['record_precipitation'] == df['actual_precipitation']) &
+            # No record year for precipitation so checks if actual=record
+            # and if the record is not 0
+            r_mask = ((df['record_precipitation'] == df.actual_precipitation) &
                       (df['record_precipitation'] != 0))
             hot_records.append(df[h_mask].record_min_temp.count())
             cold_records.append(df[c_mask].record_max_temp.count())
             rain_records.append(df[r_mask].record_precipitation.count())
+        # Set ticks for x axis and width of bars
         ind = np.arange(10)
         width = .2
+        # Sort by most record highs and reorder lists accordingly
+        sorted_idx = np.argsort(hot_records)
+        rain_records = [rain_records[i] for i in sorted_idx]
+        hot_records = [hot_records[i] for i in sorted_idx]
+        cold_records = [cold_records[i] for i in sorted_idx]
+        # Plot the data
         plt.bar(ind-width, rain_records, width=width, label='Record Rain',
-                color='skyblue')
+                color='skyblue')  # 35 total
         plt.bar(ind, hot_records, width=width, label='Record Highs',
-                color='red')
+                color='red')  # 53 total
         plt.bar(ind+width, cold_records, width=width, label='Record Lows',
-                color='blue')
-        plt.xticks(ind + width / 3, self.locs, fontsize=10, rotation=40)
+                color='blue')  # 18 total
+        # place xticks with reordered location names
+        plt.xticks(ind + width / 3, [self.locs[i] for i in sorted_idx],
+                   fontsize=10, rotation=40)
+        # Set labels and titles
         plt.ylabel('Number of Days', fontsize=14)
         plt.xlabel('Locations', fontsize=14)
         plt.title(f'Number of Record Setting days in the past Year',
@@ -220,10 +235,13 @@ class weather_examiner(object):
         plt.show()
 
     def graph_longest_drought(self, save):
+        # Create list of lengths of days w/o precipitation
         drought = [self.longest_drought(self.load_and_transform(place))
                    for place in self.locs]
+        # Load into a df and sort by number of days
         df = pd.DataFrame({'locations': self.locs, 'drought': drought})
         df.sort_values('drought', inplace=True)
+        # Create plot
         df.plot(kind='bar', y='drought', x='locations',
                 color='skyblue', legend=None)
         plt.ylabel('Days', fontsize=14)
