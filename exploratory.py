@@ -93,14 +93,14 @@ class weather_examiner(object):
 
         # Plot the weekly historical averages
         ax[0].scatter(week_df.adjusted_week, week_df.average_max_temp,
-                      color='pink', label='Yearly Average Max Temp')
+                      color='pink', label='Average Max Temp')
         ax[1].scatter(week_df.adjusted_week, week_df.average_min_temp,
-                      color='skyblue', label='Yearly Average Min Temp')
+                      color='skyblue', label='Average Min Temp')
         # Plot the current weekly averages
         ax[0].scatter(week_df.adjusted_week, week_df.actual_max_temp,
-                      color='red', label='Actual Average Max Temp')
+                      color='red', label='Actual Max Temp')
         ax[1].scatter(week_df.adjusted_week, week_df.actual_min_temp,
-                      color='blue', label='Actual Average Min Temp')
+                      color='blue', label='Actual Min Temp')
 
         # Show the legends and remove the frame to see the plots better
         ax[0].legend(loc="lower left", framealpha=0)
@@ -109,7 +109,7 @@ class weather_examiner(object):
         ax[0].set_ylabel('Temperature in °F', fontsize=16)
 
         # Put a title in the center of the two graphs
-        plt.suptitle(f'Weekly average maximum and minimums in'
+        plt.suptitle(f'Weekly Average Maximum and Minimums in'
                      f' {name}',
                      fontsize=18)
         # Add ticks and labels to left side
@@ -219,7 +219,7 @@ class weather_examiner(object):
         # Set labels and titles
         plt.ylabel('Number of Days', fontsize=14)
         plt.xlabel('Locations', fontsize=14)
-        plt.title(f'Number of Record Setting days in the past Year',
+        plt.title(f'Number of Record Setting Days in the Past Year',
                   fontsize=16)
         plt.legend()
         plt.tight_layout()
@@ -243,7 +243,7 @@ class weather_examiner(object):
         plt.ylabel('Days', fontsize=14)
         plt.xlabel('Location', fontsize=14)
         plt.xticks(rotation=90)
-        plt.title('Number of Consecutive Days with no Significant Rainfall',
+        plt.title('Number of Consecutive Days with No Significant Rainfall',
                   fontsize=16)
         plt.tight_layout()
 
@@ -256,9 +256,9 @@ class weather_examiner(object):
 if __name__ == "__main__":
     weather_ex = weather_examiner()
     # Bools to control which graphs are produced and if they are saved
-    make_temp_graphs = False
+    make_temp_graphs = True
     only_one = False
-    graph_rain = True
+    graph_rain = False
     graph_record = False
     graph_consecutive = False
     save = True
