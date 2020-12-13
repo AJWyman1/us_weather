@@ -183,24 +183,30 @@ class weather_examiner(object):
 
         plt.show()
 
-    def graph_records(self, save=False, years=5):
+    def graph_records(self, save=False):
         hot_records = []
         cold_records = []
+        rain_records = []
         for place in self.locs:
             df = self.load_and_transform(place)
-            c_mask = ((df['record_min_temp_year'] >= df.date.dt.year - years) |
+            c_mask = ((df['record_min_temp_year'] >= df.date.dt.year) |
                       (df['record_min_temp'] == df['actual_min_temp']))
-            h_mask = ((df['record_max_temp_year'] >= df.date.dt.year - years) |
+            h_mask = ((df['record_max_temp_year'] >= df.date.dt.year) |
                       (df['record_max_temp'] == df['actual_max_temp']))
+            r_mask = ((df['record_precipitation'] == df['actual_precipitation']) &
+                      (df['record_precipitation'] != 0))
             hot_records.append(df[h_mask].record_min_temp.count())
             cold_records.append(df[c_mask].record_max_temp.count())
+            rain_records.append(df[r_mask].record_precipitation.count())
         ind = np.arange(10)
-        width = .35
+        width = .2
+        plt.bar(ind-width, rain_records, width=width, label='Record Rain',
+                color='skyblue')
         plt.bar(ind, hot_records, width=width, label='Record Highs',
                 color='red')
         plt.bar(ind+width, cold_records, width=width, label='Record Lows',
                 color='blue')
-        plt.xticks(ind + width / 2, self.locs, fontsize=10, rotation=40)
+        plt.xticks(ind + width / 3, self.locs, fontsize=10, rotation=40)
         plt.ylabel('Number of Days', fontsize=14)
         plt.xlabel('Locations', fontsize=14)
         plt.title(f'Number of Record Setting days in the past Year',
@@ -237,8 +243,8 @@ if __name__ == "__main__":
     weather_ex = weather_examiner()
     # Bools to control which graphs are produced and if they are saved
     make_temp_graphs = False
-    graph_rain = True
-    graph_record = False
+    graph_rain = False
+    graph_record = True
     graph_consecutive = False
     save = True
 
@@ -250,7 +256,7 @@ if __name__ == "__main__":
         weather_ex.graph_rainfall(save=save)
 
     if graph_record:
-        weather_ex.graph_records(save=save, years=1)
+        weather_ex.graph_records(save=save)
 
     if graph_consecutive:
         weather_ex.graph_longest_drought(save)
