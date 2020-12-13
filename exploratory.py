@@ -116,8 +116,8 @@ class weather_examiner(object):
         ax[0].set_ylabel('Temperature in °F', fontsize=16)
 
         # Put a title in the center of the two graphs
-        plt.suptitle(f'Weekly average maximum and minimums at '
-                     f'{location} ({name})',
+        plt.suptitle(f'Weekly average maximum and minimums in'
+                     f' {name}',
                      fontsize=18)
         # Add ticks and labels to left side
         ax[1].tick_params(labelright=True, right=True, left=False)
@@ -174,6 +174,7 @@ class weather_examiner(object):
 
         plt.xlabel('Location', fontsize=16)
         plt.ylabel('Cumulative Precipitation in Inches', fontsize=16)
+        plt.xticks(np.arange(10), [self.locations[i] for i in pivot_df.index])
         plt.title('Total Precipitation Across all Locations', fontsize=18)
         plt.tight_layout()
 
@@ -218,8 +219,9 @@ class weather_examiner(object):
         plt.bar(ind+width, cold_records, width=width, label='Record Low',
                 color='blue')  # 18 total
         # place xticks with reordered location names
-        plt.xticks(ind + width / 3, [self.locs[i] for i in sorted_idx],
-                   fontsize=10, rotation=40)
+        plt.xticks(ind + width / 3,
+                   [self.locations[self.locs[i]] for i in sorted_idx],
+                   fontsize=10, rotation=90)
         plt.yticks(np.linspace(4, 20, 5))
         # Set labels and titles
         plt.ylabel('Number of Days', fontsize=14)
@@ -239,14 +241,15 @@ class weather_examiner(object):
         drought = [self.longest_drought(self.load_and_transform(place))
                    for place in self.locs]
         # Load into a df and sort by number of days
-        df = pd.DataFrame({'locations': self.locs, 'drought': drought})
+        df = pd.DataFrame({'locations': [self.locations[i] for i in self.locs],
+                          'drought': drought})
         df.sort_values('drought', inplace=True)
         # Create plot
         df.plot(kind='bar', y='drought', x='locations',
                 color='skyblue', legend=None)
         plt.ylabel('Days', fontsize=14)
         plt.xlabel('Location', fontsize=14)
-        plt.xticks(rotation=40)
+        plt.xticks(rotation=90)
         plt.title('Number of Consecutive Days with no Significant Rainfall',
                   fontsize=16)
         plt.tight_layout()
@@ -260,8 +263,9 @@ class weather_examiner(object):
 if __name__ == "__main__":
     weather_ex = weather_examiner()
     # Bools to control which graphs are produced and if they are saved
-    make_temp_graphs = True
-    graph_rain = False
+    make_temp_graphs = False
+    only_one = False
+    graph_rain = True
     graph_record = False
     graph_consecutive = False
     save = True
@@ -269,6 +273,8 @@ if __name__ == "__main__":
     if make_temp_graphs:
         for code, name in weather_ex.locations.items():
             weather_ex.avg_max_min_graph(code, name, save=save)
+            if only_one:
+                break
 
     if graph_rain:
         weather_ex.graph_rainfall(save=save)
